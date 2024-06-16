@@ -3,13 +3,14 @@ from settings import *
 from funciones_juego import *
 from sprites import *
 
-# pygame.init()
-SCREEN = pygame.display.set_mode(SCREEN_SIZE)
-# pygame.display.set_caption("El Huevo Enmascarado")
-
 clock = pygame.time.Clock()
 
 def main():
+
+    pygame.init()
+    SCREEN = pygame.display.set_mode(SCREEN_SIZE)
+    pygame.display.set_caption("El Huevo Enmascarado")
+    
     global is_running, clock
     while is_running:
         for event in pygame.event.get():

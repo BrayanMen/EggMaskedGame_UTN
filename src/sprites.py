@@ -48,7 +48,7 @@ def cargar_sprites():
 sprites = cargar_sprites()
 egg_sprite = sprites['egg']
 knife_sprite = sprites['knife']
-print(knife_sprite)
+
 # Egg Animaciones
 EGG_RESPIRACION = [egg_sprite[0],egg_sprite[1]]
 EGG_CAMINAR = [egg_sprite[2],egg_sprite[1],egg_sprite[3]]
