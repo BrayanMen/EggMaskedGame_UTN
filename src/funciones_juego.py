@@ -3,26 +3,50 @@ import random
 from settings import *
 from sprites import *
 
+def load_sprites(png, width, height, rows, columns):
+    sprites = []
+    image_width, image_height = png.get_size()
 
-def animacion_func(frames):
-    global image, siguiente_frame, animacion_speed, ataque, ataque_en_aire
+    for row in range(rows):
+        for col in range(columns):
+            x = col * width
+            y = row * height
+            
+            if x + width <= image_width and y + height <= image_height:
+                sprite = png.subsurface(pygame.Rect(x, y, width, height))
+                sprites.append(sprite)
+            else:
+                print(f"Advertencia: Subimagen fuera de los límites en fila {row}, columna {col}")
+
+    return sprites
+
+def animacion_func(frames, image_frame):
+    global siguiente_frame, animacion_speed, ataque, ataque_en_aire
+    image_frame
     siguiente_frame += animacion_speed
     if siguiente_frame >= len(frames):
         siguiente_frame = 0
         ataque = False
         ataque_en_aire = False
-    image = frames[int(siguiente_frame)]
+    image_frame = frames[int(siguiente_frame)]
     
 def salto_func():
-    global speed, dist_caida, suelo, roto
+    global speed_y, dist_caida, suelo, roto
     if suelo and not roto:
-        speed = -15
+        speed_y = -20
         dist_caida = 0
         suelo = False
         
-def egg_roto():
-    global roto
+def egg_roto(rect, frames, img_frame):
+    global roto, vidas
     roto = True
+    vidas -= 1
+    if vidas > 0:
+        rect.center = (WIDTH // 2, HEIGHT // 2)
+        roto = False
+    else:
+        animacion_func(frames,img_frame)
+        print("Game Over")
     
 def ataque_func():
     global ataque, ataque_en_aire
@@ -32,24 +56,31 @@ def ataque_func():
         else:
             ataque_en_aire = True
             
-# Función para generar coins
 def coins_puntos(num_items):
-    global SPRITE_HEIGHT, SPRITE_WIDTH, items
-    for _ in range(num_items):
-        item_x = random.randint(0, WIDTH - SPRITE_WIDTH)
-        item_y = random.randint(0, HEIGHT - SPRITE_HEIGHT)
-        items.append(pygame.Rect(item_x, item_y, SPRITE_WIDTH, SPRITE_HEIGHT))
+    from main import platforms
+    SPRITE_WIDTH = 32
+    SPRITE_HEIGHT = 32
+    global  items
+    for platform in platforms:
+        for _ in range(num_items):
+            item_x = random.randint(platform.left, platform.right)
+            item_y = platform.top - random.randint(30, 100)
+            items.append(pygame.Rect(item_x, item_y, SPRITE_WIDTH, SPRITE_HEIGHT))
 
-# Función para generar enemigos
 def spawn_enemies(num_enemies):
-    global SPRITE_HEIGHT, SPRITE_WIDTH, enemigos
+    SPRITE_WIDTH = 32
+    SPRITE_HEIGHT = 32
+    global enemigos
     for _ in range(num_enemies):
         enemy_x = random.randint(0, WIDTH - SPRITE_WIDTH)
         enemy_y = random.randint(0, HEIGHT - SPRITE_HEIGHT)
         enemigos.append(pygame.Rect(enemy_x, enemy_y, SPRITE_WIDTH, SPRITE_HEIGHT))
 
-# Función para lanzar cubiertos
 def launch_projectile():
-    global cuchillos, SPRITE_HEIGHT, SPRITE_WIDTH
-    proj_x = random.randint(0, WIDTH - SPRITE_WIDTH)
-    cuchillos.append(pygame.Rect(proj_x, 0, SPRITE_WIDTH, SPRITE_HEIGHT))
+    SPRITE_WIDTH = 32
+    SPRITE_HEIGHT = 32
+    global cuchillos
+    proj_x = random.randint(799,WIDTH)
+    cuchillo = pygame.Rect(proj_x, random.randint(120, HEIGHT-50), SPRITE_WIDTH, SPRITE_HEIGHT)
+    cuchillos.append(cuchillo)
+    
