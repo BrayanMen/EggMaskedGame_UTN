@@ -30,10 +30,12 @@ def animacion_func(frames, image_frame):
         ataque_en_aire = False
     image_frame = frames[int(siguiente_frame)]
     
-def salto_func():
-    global speed_y, dist_caida, suelo, roto
+def salto_func(y,rect, dist_caida, suelo, roto):
+    speed_y
+    dist_caida
+    rect.y -=10
     if suelo and not roto:
-        speed_y = -20
+        y = rect.y
         dist_caida = 0
         suelo = False
         
