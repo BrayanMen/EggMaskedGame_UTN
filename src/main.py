@@ -104,12 +104,6 @@ def main():
             if event.type == pygame.QUIT:
                 is_running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    rect.y -= 100
-                    y = rect.y
-                    if suelo and not roto:
-                        dist_caida = 0
-                        suelo = False
                 if event.key == pygame.K_a:
                     ataque_func()
         
@@ -122,7 +116,12 @@ def main():
             rect.x += 3
             x = rect.x
             animacion_func(EGG_CAMINAR,rect)
-        
+        if keys[pygame.K_UP]:
+            rect.y -= 15
+            y = rect.y
+            if suelo and not roto:
+                dist_caida = 0
+                suelo = False
         if not roto:
             speed_y += 1
             if speed_y > 10:
