@@ -22,7 +22,7 @@ vidas = 3
 coin_index = 0
 coin_animation_speed = 0.05
 bg_x = 0
-scroll_speed = 1
+scroll_speed = 7
 
 # Estados del juego
 suelo = False

@@ -24,7 +24,7 @@ knife_path = os.path.join(base_path, "assets/knife.png")
 tiles_path = os.path.join(base_path, "assets/tiles/sheet (1).png")
 tiles_image = pygame.image.load(tiles_path).convert_alpha()
 tiles_sprites = load_sprites(tiles_image, 16, 16, 8, 7)
-tiles_sprites_scaled = [pygame.transform.scale(tile, (100, 200)) for tile in tiles_sprites]
+tiles_sprites_scaled = [pygame.transform.scale(tile, (250, 100)) for tile in tiles_sprites]
 
 
 def cargar_sprites():  
@@ -34,19 +34,25 @@ def cargar_sprites():
 
     egg_sprites = load_sprites(eggmasked, SPRITE_WIDTH, SPRITE_HEIGHT, ROWS, COLUMNS)
     knife_sprites = load_sprites(knife, 30, 31.5, 2, 1)
+    
+    egg_sprites_scaled = [pygame.transform.scale(sprite, (SPRITE_WIDTH * 2, SPRITE_HEIGHT * 2)) for sprite in egg_sprites]
+    knife_sprites_scaled = [pygame.transform.scale(sprite, (30 * 2, 31.5 * 2)) for sprite in knife_sprites]
 
     return {
-        'egg': egg_sprites,
-        'knife': knife_sprites
+        'egg': egg_sprites_scaled,
+        'knife': knife_sprites_scaled
     }
 
 sprites = cargar_sprites()
 egg_sprite = sprites['egg']
 knife_sprite = sprites['knife']
+
 coin_images = []
 for i in range(1, 10):
     coin_path = os.path.join(base_path, f"assets/coin/goldCoin{i}.png")
-    coin_images.append(pygame.image.load(coin_path).convert_alpha())
+    coin_sprites = pygame.image.load(coin_path).convert_alpha()
+    coin_sprites_scale = pygame.transform.scale(coin_sprites, (32 * 2, 32 * 2))
+    coin_images.append(coin_sprites_scale)
     
 def animate_coins():
     global coin_index
@@ -81,22 +87,33 @@ EGG_MUERTO = [egg_sprite[13],egg_sprite[14],egg_sprite[15]]
 image_egg = EGG_RESPIRACION[1]
 rect = image_egg.get_rect(center=(100, 100))
 
-# Cuchiillo Animacion
 knife_image = knife_sprite[0]
-knife_image2 = knife_sprite[1]
 
-platforms = [pygame.Rect(0, 400, 200, 20), pygame.Rect(400, 300, 200, 20)]
+
+platforms = [pygame.Rect(0, 400, 200, 20), pygame.Rect(300, 300, 200, 20),pygame.Rect(600, 300, 200, 20)]
 bg_spring = pygame.image.load(bg_spring_path)
 bg_spring = pygame.transform.scale(bg_spring, SCREEN_SIZE)
 bg_autumn = pygame.image.load(bg_autumn_path)
 bg_autumn = pygame.transform.scale(bg_autumn, SCREEN_SIZE)
 
-def main():
-    global is_running,coins_puntos,salto_func,ataque_func,animacion_func,egg_roto,launch_projectile, clock,speed_y,speed_x, HEIGHT,suelo,dist_caida,y,screen,bg_x,scroll_speed,vidas,puntaje, image_egg,rect
+def crear_plataformas(nueva_distancia):
+    nueva_plataforma = pygame.Rect(nueva_distancia, random.randint(200, HEIGHT), 300, 2000)
+    nueva_moneda = pygame.Rect(nueva_distancia + 50, nueva_plataforma.y - 100, 302, 2)
+    return nueva_plataforma, nueva_moneda
 
-    x=0
+def main():
+    global is_running, coins_puntos, salto_func, ataque_func, ataque_en_aire, ataque,animacion_func, egg_roto, launch_projectile
+    global clock, speed_y, speed_x, HEIGHT, suelo, dist_caida, y, screen, bg_x, scroll_speed, vidas, puntaje, image_egg, rect,x,animacion_speed,siguiente_frame
+
+    x = 0
+    y = 0
     
-    coins_puntos(random.randint(1, 3))
+    for i in range(1):
+        nueva_plataforma, nueva_moneda = crear_plataformas(500 * (i + 1))
+        platforms.append(nueva_plataforma)
+        items.append(nueva_moneda)
+      
+    coins_puntos(random.randint(1,5))
     
     while is_running:
         
@@ -105,67 +122,87 @@ def main():
                 is_running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
-                    ataque_func()
+                    if not roto and not ataque_en_aire:
+                        if suelo:
+                            ataque = True
+                        elif not suelo:
+                            ataque_en_aire = True
+                if event.key == pygame.K_UP:
+                    if suelo and not roto:
+                        speed_y = -20
+                        suelo = False
         
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            rect.x -= 3
+            rect.x -= 2
             x = rect.x
-            animacion_func(EGG_CAMINAR,rect)
+            if rect.x > 0:
+                image_egg, siguiente_frame = animacion_func(EGG_CAMINAR, siguiente_frame, animacion_speed)
         if keys[pygame.K_RIGHT]:
-            rect.x += 3
+            rect.x += 2
             x = rect.x
-            animacion_func(EGG_CAMINAR,rect)
-        if keys[pygame.K_UP]:
-            rect.y -= 15
-            y = rect.y
-            if suelo and not roto:
-                dist_caida = 0
-                suelo = False
-        if not roto:
-            speed_y += 1
-            if speed_y > 10:
-                speed_y= 1
-            y += speed_y
-            rect.y = y
-            x += speed_x
-            rect.x = x
+            image_egg, siguiente_frame = animacion_func(EGG_CAMINAR, siguiente_frame, animacion_speed)
             
-            if speed_y > 0:
-                dist_caida += speed_y
-                animacion_func(EGG_CAIDA,image_egg)
-            elif speed_y < 0:
-                animacion_func(EGG_SALTO,image_egg)
+            bg_x -= scroll_speed
+            if bg_x <= -SCREEN_SIZE[0]:
+                bg_x = x
             else:
-                dist_caida = 0
-                if suelo:
-                    if ataque:
-                        animacion_func(EGG_ATAQUE,image_egg)
-                        ataque=False
-                    elif ataque_en_aire:
-                        animacion_func(EGG_SALTO_ATAQUE,image_egg)
-                        ataque_en_aire = False
-                    else:
-                        animacion_func(EGG_RESPIRACION,image_egg)
+                bg_x += -scroll_speed
                 
-            if rect.bottom > HEIGHT:
-                if dist_caida > 50:
-                    egg_roto(rect,EGG_MUERTO,image_egg)
+            for platform in platforms:
+                platform.x -= scroll_speed+2
+                if platform.right < 0:
+                    platforms.remove(platform)
+                    nueva_plataforma, nueva_moneda = crear_plataformas(platform.x + 1000)
+                    platforms.append(nueva_plataforma)
+                    items.append(nueva_moneda)
+                    
+            for item in items:
+                item.x -= scroll_speed
+                if item.right < 0:
+                    items.remove(item)
+                    
+            for cuchillo in cuchillos:
+                cuchillo.x -= scroll_speed
+                if cuchillo.right < 0:
+                    cuchillos.remove(cuchillo)
+            
+        else:
+            image_egg, siguiente_frame = animacion_func(EGG_RESPIRACION, siguiente_frame, animacion_speed)
+
+        if not roto:
+            speed_y += 1  
+            rect.y += speed_y
+            if not suelo:
+                if speed_y < 0:
+                    image_egg, siguiente_frame = animacion_func(EGG_SALTO, siguiente_frame, animacion_speed)
+                else:
+                    image_egg, siguiente_frame = animacion_func(EGG_CAIDA, siguiente_frame, animacion_speed)
+            else:
+                if ataque:
+                    image_egg, siguiente_frame = animacion_func(EGG_ATAQUE, siguiente_frame, animacion_speed)
+                    ataque = False
+                elif ataque_en_aire:
+                    image_egg, siguiente_frame = animacion_func(EGG_SALTO_ATAQUE, siguiente_frame, animacion_speed)
+                    ataque_en_aire = False
+                else:
+                    image_egg, siguiente_frame = animacion_func(EGG_RESPIRACION, siguiente_frame, animacion_speed)
+
+            if rect.bottom >= HEIGHT:
+                if dist_caida == 0:
+                    image_egg, siguiente_frame = animacion_func(EGG_MUERTO, siguiente_frame, animacion_speed)
+                    vidas -= 1
                 rect.bottom = HEIGHT
-                y = rect.y
                 speed_y = 0
                 suelo = True
-            else:
-                suelo = False
-                
+
             for platform in platforms:
                 if rect.colliderect(platform) and speed_y > 0:
                     speed_y = 0
-                    y = platform.top - rect.height
-                    rect.y = y
+                    rect.y = platform.top - rect.height
                     suelo = True
                     dist_caida = 0
-                    
+
             for item in items[:]:
                 if rect.colliderect(item):
                     items.remove(item)
@@ -173,55 +210,42 @@ def main():
                     if puntaje >= 100:
                         vidas += 1
                         puntaje -= 100
-                        
+
             for cuchillo in cuchillos[:]:
-                # if cuchillo.x < rect.x:
-                #     cuchillo.x += 2
-                # elif cuchillo.x > rect.x:
-                #     cuchillo.x -= 2
-                # if cuchillo.y < rect.y:
-                #     cuchillo.y += 2
-                # elif cuchillo.y > rect.y:
-                #     cuchillo.y -= 2
-                cuchillo.x -=2
-                # cuchillo.y -=2
+                cuchillo.x -= 2
                 if rect.colliderect(cuchillo):
                     vidas -= 1
                     cuchillos.remove(cuchillo)
 
-            if random.randint(0, 100) < 2:
+            if random.randint(0, 800) < 2:
                 launch_projectile()
 
-            bg_x -= scroll_speed
-            if bg_x <= -WIDTH:
-                bg_x = 0
-                
+            if vidas == 0:
+                image_egg, siguiente_frame = animacion_func(EGG_MUERTO, siguiente_frame, animacion_speed)
+                print("Game Over")
+                break
         else:
-            egg_roto(rect,EGG_MUERTO,image_egg)
-                    
+            image_egg, siguiente_frame = animacion_func(EGG_MUERTO, siguiente_frame, animacion_speed)
+            
         screen.blit(bg_autumn, (0, 0))
-        # SCREEN.blit(bg_spring, (bg_x + SCREEN_SIZE[0], 0))
-        # bg_x -= scroll_speed
-        # if bg_x <= -WIDTH:
-        #     bg_x = 0
-                           
+        
         for platform in platforms:
-            pygame.draw.rect(screen, (0, 0, 0), platform)
+            screen.blit(tiles_sprites_scaled[4], platform)
         for item in items:
             screen.blit(animate_coins(), item.topleft)
         for cuchillo in cuchillos:
             screen.blit(knife_image, cuchillo.topleft)
-        screen.blit(image_egg, rect)  
-               
+        screen.blit(image_egg, rect)
+
         font = pygame.font.Font(None, 36)
         score_text = font.render(f"Score: {puntaje}", True, (0, 0, 0))
         lives_text = font.render(f"Lives: {vidas}", True, (0, 0, 0))
         screen.blit(score_text, (10, 10))
         screen.blit(lives_text, (10, 50))
-             
-        cuadricula(screen,tile_size,WIDTH,HEIGHT)
+
+        cuadricula(screen, tile_size, WIDTH, HEIGHT)
         pygame.display.update()
         clock.tick(FPS)
-                
+
 if __name__ == "__main__":
     main()

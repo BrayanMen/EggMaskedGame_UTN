@@ -20,26 +20,28 @@ def load_sprites(png, width, height, rows, columns):
 
     return sprites
 
-def animacion_func(frames, image_frame):
-    global siguiente_frame, animacion_speed, ataque, ataque_en_aire
-    image_frame
-    siguiente_frame += animacion_speed
+def animacion_func(frames, siguiente_frame, animacion_speed):
+    global ataque, ataque_en_aire
+
+    siguiente_frame += animacion_speed 
     if siguiente_frame >= len(frames):
         siguiente_frame = 0
         ataque = False
         ataque_en_aire = False
-    image_frame = frames[int(siguiente_frame)]
+
+    image = frames[int(siguiente_frame)]
+    return image, siguiente_frame 
     
-def salto_func(y,rect, dist_caida, suelo, roto):
-    speed_y
-    dist_caida
-    rect.y -=10
-    if suelo and not roto:
-        y = rect.y
-        dist_caida = 0
-        suelo = False
+# def salto_func(y,rect, dist_caida, suelo, roto):
+#     speed_y
+#     dist_caida
+#     rect.y -=10
+#     if suelo and not roto:
+#         y = rect.y
+#         dist_caida = 0
+#         suelo = False
         
-def egg_roto(rect, frames, img_frame):
+def egg_roto(rect):
     global roto, vidas
     roto = True
     vidas -= 1
@@ -47,7 +49,6 @@ def egg_roto(rect, frames, img_frame):
         rect.center = (WIDTH // 2, HEIGHT // 2)
         roto = False
     else:
-        animacion_func(frames,img_frame)
         print("Game Over")
     
 def ataque_func():
